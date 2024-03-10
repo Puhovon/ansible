@@ -1,0 +1,55 @@
+---
+
+- name: update webservers
+  hosts: webservers
+  user: iphilka
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: Create user
+      ansible.builtin.user:
+        state: present
+        name: ansible-worker
+        shell: /bin/bash
+
+    - name: Install git
+      ansible.builtin.apt:
+        name: git
+        state: present
+        update_cache: true
+        
+    - name: Add permissions
+      ansible.builtin.file:
+        path: /home/ansible-worker
+        mode: '766'
+        state: directory
+
+    - name: Copy id_rsa.pub
+      ansible.builtin.copy:
+        src: ./ssh_keys/id_rsa.pub
+        dest: /home/iphilka/.ssh/id_rsa.pub
+        owner: iphilka
+        mode: '700'
+
+    - name: Copy id_rsa
+      ansible.builtin.copy:
+        src: ./ssh_keys/id_rsa
+        dest: /home/iphilka/.ssh/id_rsa
+        owner: iphilka
+        mode: '700'
+
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: git@github.com:iphilka/stud-template.git
+        dest: /home/ansible-worker/www/stud-template/
+        accept_hostkey: true
+        key_file: /home/iphilka/.ssh/id_rsa
+        force: true
+
+    - name: Copy index
+      ansible.builtin.copy:
+        src: ./index.html
+        dest: /home/ansible-worker/www/stud-template/
+        owner: ansible-worker
+        mode: u=rw,g=r,o=r

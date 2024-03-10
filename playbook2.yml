@@ -1,0 +1,51 @@
+---
+
+- name: update webservers
+  hosts: webservers
+  user: iphilka
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: Install nginx via apt
+      ansible.builtin.apt:
+        name: "nginx"
+        state: "latest"
+        update_cache: true
+
+    - name: delete default config
+      ansible.builtin.file:
+        path: /etc/nginx/sites-available/default
+        state: absent
+
+    - name: copy config
+      ansible.builtin.copy:
+        src: ./ansible.iphilka.ru.conf
+        dest: /etc/nginx/sites-available
+        mode: '644'
+        owner: root
+      notify:
+        - restart nginx
+
+    - name: delete default symlink
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Create symlink
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
+        dest: /etc/nginx/sites-enabled/ansible.iphilka.ru.conf
+        state: link
+        force: true
+
+    - name: add permission
+      ansible.builtin.file:
+        path: /home/ansible-worker/
+        mode: '777'
+
+  handlers:
+    - name: restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

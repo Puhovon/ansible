@@ -1,0 +1,2 @@
+ansible-playbook -i hosts.ini playbook1.yml -K
+ansible-playbook -i hosts.ini playbook2.yml -K
