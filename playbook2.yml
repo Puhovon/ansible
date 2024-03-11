@@ -1,7 +1,7 @@
 ---
 
 - name: update webservers
-  hosts: webservers
+  hosts: all
   user: iphilka
   become: yes
   become_user: root
